@@ -19,6 +19,7 @@ class MessageReceiver(Thread):
         self.daemon = True
         self.connection = connection
         self.client = client
+        self.start()
         
 
         # TODO: Finish initialization of MessageReceiver
