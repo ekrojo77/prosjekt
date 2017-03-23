@@ -31,10 +31,10 @@ class MessageParser():
         content = payload.get('content')
         return '[Message: ' + content + "," + time + 'from: ' + payload.get('sender') + ']'
     def parse_history(self, payload):
-        MessageHistory = payload.get('content')
+        MessageHistory = payload['content']
         ParsedMsg = ''
         for msg in MessageHistory:
-            ParsedMsg = ParsedMsg + self.parse_msg(json.load(msg)) + "\n"
+            ParsedMsg = ParsedMsg + msg['timestamp'] + ' From: ' + msg['sender'] + ' : ' + msg['content'] + "\n"
         return ParsedMsg
                                                                             
     # Include more methods for handling the different responses... 
