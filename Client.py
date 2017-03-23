@@ -36,7 +36,7 @@ class Client:
                 if(input_[0] == "login"):
                     self.send_payload({'request': 'login', 'content': input_[1]})
                 elif(input_[0] == "logout"):
-                    self.disconnect()
+                    self.send_payload({'request': 'logout',})
                 elif(input_[0] == "msg"):
                     self.send_payload({'request': 'msg', 'content': input_[1]})
                 elif(input_[0] == "names"):
@@ -72,3 +72,4 @@ if __name__ == '__main__':
     No alterations are necessary
     """
     client = Client('localhost', 9998)
+
