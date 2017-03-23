@@ -12,7 +12,7 @@ must be written here (e.g. a dictionary for connected clients)
 users = {}
 usernames = []
 MessageHistory = []
-
+client = ''
 
 
 PosResponses = "Possible responses this server handles are: login, logout, msg and names"
@@ -49,48 +49,62 @@ class ClientHandler(SocketServer.BaseRequestHandler):
             received_content = json.loads(received_string).get('content')
 
             def response_(sender,response,content):
-                response =  {'timestamp':str(time.time()),
+                response =  {'timestamp':time.strftime("%H:%M:%S"),
                          'sender':sender,
                          'response':response,
                          'content':content}
                 self.connection.send(json.dumps(response).encode('utf-8'))
+            def sendMessages(self, data):
+                payload = json.dumps(data)
+                for client in users.values():
+                    client.send(payload)
                     
             if(request == "login"):
-                if(re.match("^[A-Za-z0-9]+$",received_content)):
-                    if(received_content not in users.values()):
-                        users[self] = received_content
-                        response_('Server','info','Successful login')
-                        response_('Server','history',MessageHistory)
-                        usernames.append(received_content)
-                        print MessageHistory
-                        print users
+                if(client == ""):
+                    if(received_content != ""):
+                        if(re.match("^[A-Za-z0-9]+$",received_content)):
+                            if(received_content not in users.values()):
+                                client = received_content
+                                users[self] = received_content
+                                response_('Server','info','Successful login')
+                                time.sleep(0.1)
+                                response_('Server','history',MessageHistory)
+                                usernames.append(received_content)
+                            else:
+                                response_('Server','error','Username already taken')
+                        else:
+                            response_('Server','error','Username can only be letters and numbers')
                     else:
-                        response_('Server','error','Username already taken')
+                        response_('Server','error','No username')
                 else:
-                    response_('Server','error','Username can only be letters and numbers')
+                    response_('Server','error','Already logged in')
             elif(request == "help"):
                 response_('Server','error',PosResponses)
             elif(request == "logout") | (request == "msg") | (request == "names"):
-                if(users !=  ''):
+                if(client != ''):
                     if(request == "logout"):
                             del users[self]
-                            usernames.remove(self.username)
+                            usernames.remove(client)
+                            client = ''
                             response_('Server','info','You have been logged out')
                     elif(request == "msg"):
-                        response =  {'timestamp':str(time.time()),
+                        response =  {'timestamp':time.strftime("%H:%M:%S"),
+                                     'sender':users[self],
+                                     'response':'msg',
+                                     'content':received_content}
+                        history = {'timestamp':time.strftime("%H:%M:%S"),
                                      'sender':users[self],
                                      'response':'history',
                                      'content':received_content}
-                        MessageHistory.append(response)
-                        response_(users[self],'msg',received_content)
+                        MessageHistory.append(history)
                         for user in users:
-                            user.request.sendall(json.dumps(response))
+                            user.request.send(json.dumps(response))
 
                     elif(request == "names"):
                         ClientList = ''
                         for user in usernames:
-                            ClientList += user + ''
-                        response_(users[self], 'names', ClientList)
+                            ClientList += user + ', '
+                        response_(users[self], 'info', ClientList)
 
                 else:
                     response_('Server','error','You are not logged in')
